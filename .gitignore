@@ -1,2 +1,8 @@
 .env
 .mypy_cache
+.venv/
+__pycache__/
+chroma_db/
+audio_out/
+models/voices/
+.ipynb_checkpoints/
