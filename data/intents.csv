@@ -1,0 +1,201 @@
+text,label
+what will I learn in this program,course_info
+is there an age limit please?,other
+what batches are available,fees_batches
+how do I register,other
+is there a morning batch online,fees_batches
+could you tell me how are you,small_talk
+namaste please?,greeting
+hi,greeting
+how long are the courses,course_info
+what programs are available,course_info
+tell me something interesting,small_talk
+do you provide certificates,other
+are you doing well,small_talk
+which course is suitable for beginners,course_info
+thank you (3),small_talk
+can you tell me what is your phone number,other
+can you tell me what programs are available,course_info
+nice to talk to you,small_talk
+greetings,greeting
+hi right now,greeting
+thanks a lot (4),small_talk
+hey there please,greeting
+tell me about your courses,course_info
+how is your day,small_talk
+is there an age limit,other
+what is your address,other
+which courses can I join please,course_info
+is there a morning batch,fees_batches
+hey?,greeting
+could you tell me how do I register,other
+"hi, can you help me?",greeting
+how are you doing,small_talk
+namaste,greeting
+"hi, can you help me",greeting
+awesome please,small_talk
+can you tell me what are the course modules,course_info
+tell me about the curriculum,course_info
+what documents do I need,other
+nice to meet you,greeting
+is there an entrance test?,other
+is there an entrance test,other
+is there a data science course right now,course_info
+good evening,greeting
+thanks a lot,small_talk
+where is the academy located,other
+I want information about the courses,course_info
+can you tell me what's up,small_talk
+do you have weekend batches,fees_batches
+is the course beginner friendly right now,course_info
+is there an evening batch online,fees_batches
+can you tell me what are the batch timings,fees_batches
+are there any additional charges?,fees_batches
+when is the next batch,fees_batches
+thanks a lot please?,small_talk
+tell me about your courses?,course_info
+hello,greeting
+where is the academy located?,other
+can I get a demo class,other
+hello there,greeting
+how much is the course fee,fees_batches
+can you tell me what batches are available,fees_batches
+"hey, are you available",greeting
+sounds good (1),small_talk
+could you tell me how do I apply,other
+who are you,small_talk
+do you offer advanced courses (1),course_info
+could you tell me how can I enroll in the next batch,fees_batches
+hi everyone please,greeting
+hey there,greeting
+can I visit the academy,other
+you're helpful,small_talk
+is parking available,other
+could you tell me how long are the courses,course_info
+tell me the course price,fees_batches
+could you tell me how can I contact the academy,other
+which courses can I join,course_info
+what are the batch timings,fees_batches
+which course is suitable for beginners (2),course_info
+can you tell me what can I study at the academy,course_info
+can you tell me what documents do I need,other
+tell me the course price for a beginner,fees_batches
+is there an evening batch (3),fees_batches
+can you tell me what time are the classes,fees_batches
+what can you do,small_talk
+okay thanks,small_talk
+nice to meet you online,greeting
+hi everyone,greeting
+sounds good,small_talk
+could you tell me how are you doing,small_talk
+how do I apply,other
+can you tell me what is included in the course,course_info
+can you tell me what are the fees,fees_batches
+I appreciate your help,small_talk
+when does the next batch start,fees_batches
+great?,small_talk
+is the course beginner friendly,course_info
+hello academy please,greeting
+can international students apply,other
+is there an evening batch,fees_batches
+give me course details right now,course_info
+can you tell me what are the admission requirements,other
+hey,greeting
+hey academy for me,greeting
+are classes available offline online,other
+can I pay in installments please,fees_batches
+can I pay in installments,fees_batches
+nice to talk to you please?,small_talk
+what's up,small_talk
+how do I register (2),other
+can you tell me what can you do,small_talk
+can I visit the academy online,other
+how are you,small_talk
+"hello, is anyone there",greeting
+what subjects do you teach,course_info
+can you tell me what is your email address,other
+that's great,small_talk
+I appreciate your help please,small_talk
+good to chat with you,small_talk
+could you tell me how is your day,small_talk
+good day for a beginner,greeting
+could you tell me how much is the course fee,fees_batches
+which course is suitable for beginners please,course_info
+good afternoon for a beginner,greeting
+what are the fees,fees_batches
+how can I contact the academy,other
+how can I enroll in the next batch (4),fees_batches
+can you tell me what is the tuition fee,fees_batches
+what are the course modules,course_info
+what can I study at the academy,course_info
+what are your fees,fees_batches
+are there any additional charges,fees_batches
+can you tell me what courses do you offer,course_info
+is there a registration fee please,fees_batches
+what time are the classes (1),fees_batches
+what documents do I need (3),other
+okay thanks (2),small_talk
+hi academy?,greeting
+is parking available online,other
+you're helpful for a beginner,small_talk
+do you offer advanced courses,course_info
+do you have an AI course right now,course_info
+awesome,small_talk
+hello there right now,greeting
+can you tell me what subjects do you teach,course_info
+is there a registration fee,fees_batches
+do you offer advanced courses please,course_info
+sounds good?,small_talk
+good day,greeting
+do you offer payment plans,fees_batches
+greetings please,greeting
+tell me something interesting for me,small_talk
+is there a morning batch (2),fees_batches
+good evening please?,greeting
+can you tell me what will I learn in this program,course_info
+what is the tuition fee,fees_batches
+can you tell me what are your fees,fees_batches
+hi academy,greeting
+do you offer payment plans please?,fees_batches
+are classes available offline,other
+do you provide placement assistance,other
+how much does it cost,fees_batches
+do you provide online classes,other
+"hey, are you available right now",greeting
+what is your email address,other
+could you tell me how much does it cost,fees_batches
+can international students apply online,other
+what courses do you offer,course_info
+hello please?,greeting
+can you explain the syllabus?,course_info
+cool,small_talk
+how can I enroll in the next batch,fees_batches
+do you offer programming courses please,course_info
+do you have weekday batches,fees_batches
+do you provide placement assistance please,other
+what is your phone number,other
+give me course details,course_info
+thank you,small_talk
+can I get a demo class (1),other
+great,small_talk
+are you doing well right now,small_talk
+is there a data science course,course_info
+do you offer programming courses,course_info
+could you tell me howdy,greeting
+good morning for a beginner,greeting
+good afternoon,greeting
+what time are the classes,fees_batches
+cool for me,small_talk
+howdy,greeting
+that's great for a beginner,small_talk
+what are the admission requirements,other
+hello academy,greeting
+do you offer career support,other
+"hello, is anyone there please",greeting
+do you have an AI course,course_info
+what is included in the course,course_info
+can you explain the syllabus,course_info
+do you offer career support?,other
+good morning,greeting
+hey academy,greeting
+can you tell me what is your address,other
