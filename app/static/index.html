@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Academy Assistant</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f4f4f5;
+    --surface-2: #e9e9ec;
+    --text: #18181b;
+    --muted: #71717a;
+    --border: #e4e4e7;
+    --accent: #6d5dfc;
+    --accent-2: #22c1ee;
+    --user-bubble: #f1f1f3;
+    --btn: #18181b;
+    --btn-text: #ffffff;
+    --overlay: #0b0b10;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141417;
+      --surface: #1f1f24;
+      --surface-2: #2a2a31;
+      --text: #ececf1;
+      --muted: #9b9ba7;
+      --border: #2c2c33;
+      --user-bubble: #2a2a31;
+      --btn: #ececf1;
+      --btn-text: #141417;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  svg { display: block; }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .brand-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--accent-2), var(--accent));
+  }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center; color: var(--muted);
+  }
+  .icon-btn:hover { background: var(--surface); color: var(--text); }
+
+  /* ---------- messages ---------- */
+  main { flex: 1; overflow-y: auto; }
+  .thread { max-width: 760px; margin: 0 auto; padding: 8px 16px 24px; }
+  .msg { margin: 18px 0; display: flex; }
+  .msg.user { justify-content: flex-end; }
+  .msg.user .bubble {
+    background: var(--user-bubble); padding: 10px 16px;
+    border-radius: 20px; max-width: 80%; white-space: pre-wrap; word-wrap: break-word;
+  }
+  .msg.assistant .bubble { max-width: 100%; word-wrap: break-word; }
+  .bubble p { margin: 0 0 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble ul, .bubble ol { margin: 6px 0 10px; padding-left: 22px; }
+  .bubble code { background: var(--surface); padding: 1px 6px; border-radius: 6px; font-size: .92em; }
+  .via-voice { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; text-align: right; }
+
+  .typing { display: inline-flex; gap: 5px; padding: 8px 0; }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+    animation: blink 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+  /* ---------- empty state ---------- */
+  .empty {
+    height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 16px;
+  }
+  .empty h1 { font-size: 28px; font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em; }
+  .empty p { color: var(--muted); margin: 0 0 28px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 620px; }
+  .chip {
+    border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px;
+    color: var(--text); font-size: 14px;
+  }
+  .chip:hover { background: var(--surface); }
+
+  /* ---------- composer ---------- */
+  footer { padding: 8px 16px 18px; }
+  .composer {
+    max-width: 760px; margin: 0 auto;
+    display: flex; align-items: flex-end; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 28px; padding: 8px 8px 8px 20px;
+  }
+  .composer textarea {
+    flex: 1; resize: none; border: 0; outline: 0; background: transparent;
+    color: var(--text); font: inherit; max-height: 180px; padding: 8px 0; line-height: 1.5;
+  }
+  .composer textarea::placeholder { color: var(--muted); }
+  .round {
+    width: 40px; height: 40px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; transition: transform .15s, opacity .15s;
+  }
+  .round:active { transform: scale(.94); }
+  .round.primary { background: var(--btn); color: var(--btn-text); }
+  .round.ghost { color: var(--muted); }
+  .round.ghost:hover { background: var(--surface-2); color: var(--text); }
+  .round:disabled { opacity: .4; cursor: default; }
+  .hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* ---------- voice mode ---------- */
+  .voice {
+    position: fixed; inset: 0; z-index: 10;
+    background: var(--overlay); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .voice.open { opacity: 1; pointer-events: auto; }
+  .voice-top { width: 100%; max-width: 760px; text-align: center; font-size: 14px; color: #a1a1aa; min-height: 22px; }
+  .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; width: 100%; }
+  .orb-wrap { --level: 0; width: min(240px, 60vw); aspect-ratio: 1; position: relative; }
+  .orb {
+    position: absolute; inset: 0; border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.85), transparent 35%),
+      conic-gradient(from 0deg, #6d5dfc, #22c1ee, #8be9c9, #6d5dfc);
+    filter: saturate(1.1);
+    transform: scale(calc(.82 + var(--level) * .35));
+    transition: transform .08s linear;
+    animation: spin 8s linear infinite;
+    box-shadow: 0 0 calc(40px + var(--level) * 80px) rgba(109,93,252,.45);
+  }
+  .orb-wrap.thinking .orb { animation: spin 1.6s linear infinite, breathe 1.6s ease-in-out infinite; }
+  .orb-wrap.muted .orb { filter: grayscale(1) brightness(.6); }
+  @keyframes spin { to { rotate: 360deg; } }
+  @keyframes breathe { 50% { transform: scale(.74); } }
+  .status { font-size: 17px; color: #e4e4e7; min-height: 26px; text-align: center; }
+  .caption {
+    max-width: 560px; text-align: center; color: #a1a1aa; font-size: 15px;
+    min-height: 48px; padding: 0 8px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .controls { display: flex; gap: 20px; }
+  .ctrl {
+    width: 60px; height: 60px; border-radius: 50%;
+    display: grid; place-items: center; background: #26262d; color: #fff;
+  }
+  .ctrl:hover { background: #31313a; }
+  .ctrl.on { background: #fff; color: #111; }
+  .ctrl.end { background: #ef4444; }
+  .ctrl.end:hover { background: #dc2626; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%);
+    background: #27272a; color: #fff; padding: 10px 16px; border-radius: 12px;
+    font-size: 14px; z-index: 20; opacity: 0; transition: opacity .2s; pointer-events: none;
+    max-width: calc(100% - 32px);
+  }
+  .toast.show { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb, .orb-wrap.thinking .orb { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="brand-dot"></span>Academy Assistant</div>
+  <button class="icon-btn" id="newChat" title="New chat" aria-label="New chat">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+  </button>
+</header>
+
+<main id="scroller">
+  <div class="empty" id="empty">
+    <h1>How can I help you today?</h1>
+    <p>Ask about courses, fees, batch timings or syllabus — type, or talk to me.</p>
+    <div class="chips">
+      <button class="chip">What courses do you offer?</button>
+      <button class="chip">What are the fees for Python?</button>
+      <button class="chip">When do the evening batches start?</button>
+      <button class="chip">Show me the data science syllabus</button>
+    </div>
+  </div>
+  <div class="thread" id="thread" hidden></div>
+</main>
+
+<footer>
+  <div class="composer">
+    <textarea id="input" rows="1" placeholder="Message Academy Assistant"></textarea>
+    <button class="round primary" id="action" title="Start voice mode" aria-label="Start voice mode"></button>
+  </div>
+  <div class="hint">Answers may be inaccurate. Please verify important details with the academy.</div>
+</footer>
+
+<section class="voice" id="voice" aria-hidden="true">
+  <div class="voice-top" id="voiceTop">Voice mode</div>
+  <div class="stage">
+    <div class="orb-wrap" id="orb" role="button" tabindex="0" aria-label="Orb"><div class="orb"></div></div>
+    <div class="status" id="status">Connecting…</div>
+    <div class="caption" id="caption"></div>
+  </div>
+  <div class="controls">
+    <button class="ctrl" id="muteBtn" title="Mute microphone" aria-label="Mute microphone"></button>
+    <button class="ctrl end" id="endBtn" title="End voice mode" aria-label="End voice mode">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ICONS = {
+  send: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+  wave: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>',
+  stop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>',
+  mic: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>',
+  micOff: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20M9 9v1a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.9-.6M19 10a7 7 0 0 1-1.2 3.9M5 10a7 7 0 0 0 10.9 5.8M12 17v4"/></svg>',
+};
+
+const $ = (id) => document.getElementById(id);
+const thread = $("thread"), empty = $("empty"), scroller = $("scroller");
+const input = $("input"), actionBtn = $("action");
+
+/* ---------------- session ---------------- */
+function store(k, v) { try { v === undefined ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+function load(k) { try { return localStorage.getItem(k); } catch { return null; } }
+const newId = () => (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : String(Date.now()) + Math.random().toString(16).slice(2));
+let sessionId = load("sessionId") || newId();
+store("sessionId", sessionId);
+
+/* ---------------- rendering ---------------- */
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+// Small, safe markdown subset: paragraphs, lists, **bold**, *italic*, `code`.
+function renderMarkdown(src) {
+  const inline = (t) => escapeHtml(t)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  const out = [];
+  let list = null;
+  const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  let para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${para.map(inline).join("<br>")}</p>`); para = []; } };
+  for (const line of src.split(/\r?\n/)) {
+    const ul = line.match(/^\s*[-*•]\s+(.*)/), ol = line.match(/^\s*\d+[.)]\s+(.*)/);
+    if (ul || ol) {
+      flush();
+      const kind = ul ? "ul" : "ol";
+      if (list !== kind) { closeList(); out.push(`<${kind}>`); list = kind; }
+      out.push(`<li>${inline((ul || ol)[1])}</li>`);
+    } else if (!line.trim()) {
+      flush(); closeList();
+    } else {
+      closeList();
+      para.push(line.replace(/^#+\s*/, ""));
+    }
+  }
+  flush(); closeList();
+  return out.join("");
+}
+
+function showThread() { empty.hidden = true; thread.hidden = false; }
+function scrollDown() { scroller.scrollTop = scroller.scrollHeight; }
+
+function addMessage(role, text, { voice = false } = {}) {
+  showThread();
+  const row = document.createElement("div");
+  row.className = `msg ${role}`;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  if (role === "assistant") bubble.innerHTML = renderMarkdown(text);
+  else {
+    if (voice) bubble.insertAdjacentHTML("afterbegin", '<span class="via-voice">🎙 voice</span>');
+    bubble.appendChild(document.createTextNode(text));
+  }
+  row.appendChild(bubble);
+  thread.appendChild(row);
+  scrollDown();
+  return row;
+}
+
+function addTyping() {
+  showThread();
+  const row = document.createElement("div");
+  row.className = "msg assistant";
+  row.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  thread.appendChild(row);
+  scrollDown();
+  return row;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+/* ---------------- text chat ---------------- */
+let busy = false;
+
+function updateAction() {
+  const hasText = input.value.trim().length > 0;
+  actionBtn.innerHTML = hasText ? ICONS.send : ICONS.wave;
+  actionBtn.title = hasText ? "Send" : "Start voice mode";
+  actionBtn.setAttribute("aria-label", actionBtn.title);
+  actionBtn.disabled = hasText && busy;
+}
+
+function autosize() {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 180) + "px";
+}
+
+async function sendText(text) {
+  text = text.trim();
+  if (!text || busy) return;
+  busy = true;
+  input.value = ""; autosize(); updateAction();
+  addMessage("user", text);
+  const typing = addTyping();
+  try {
+    const r = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, session_id: sessionId }),
+    });
+    if (!r.ok) throw new Error(`Server returned ${r.status}`);
+    const d = await r.json();
+    typing.remove();
+    addMessage("assistant", d.reply);
+  } catch (e) {
+    typing.remove();
+    addMessage("assistant", "Sorry, I couldn't reach the server. Please try again.");
+    console.error(e);
+  } finally {
+    busy = false;
+    updateAction();
+    input.focus();
+  }
+}
+
+input.addEventListener("input", () => { autosize(); updateAction(); });
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendText(input.value); }
+});
+actionBtn.addEventListener("click", () => input.value.trim() ? sendText(input.value) : Voice.open());
+document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => sendText(c.textContent)));
+
+$("newChat").addEventListener("click", () => {
+  sessionId = newId();
+  store("sessionId", sessionId);
+  thread.innerHTML = "";
+  thread.hidden = true;
+  empty.hidden = false;
+  input.focus();
+});
+
+async function restoreHistory() {
+  try {
+    const r = await fetch(`/history/${sessionId}`);
+    if (!r.ok) return;
+    for (const m of await r.json()) {
+      addMessage(m.role === "assistant" ? "assistant" : "user", m.message, { voice: m.channel === "voice" && m.role === "user" });
+    }
+  } catch {}
+}
+
+/* ---------------- voice mode ---------------- */
+const Voice = (() => {
+  const overlay = $("voice"), orb = $("orb"), status = $("status"), caption = $("caption");
+  const muteBtn = $("muteBtn");
+
+  const SILENCE_MS = 1300;     // pause length that ends your turn
+  const MIN_SPEECH_MS = 250;   // ignore clicks and short noises
+  const MAX_TURN_MS = 30000;
+
+  let active = false, muted = false, state = "idle";
+  let stream, ctx, micAnalyser, outAnalyser, recorder, chunks = [], player;
+  let raf, noiseFloor = 0.01, speechStart = 0, lastVoice = 0, turnStart = 0, heardSpeech = false;
+  let request; // AbortController for the in-flight /voice call
+
+  const buf = new Float32Array(1024);
+  function level(an) {
+    if (!an) return 0;
+    an.getFloatTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    return Math.sqrt(sum / buf.length);
+  }
+
+  function setState(s, text) {
+    state = s;
+    orb.className = "orb-wrap " + s + (muted ? " muted" : "");
+    status.textContent = text;
+  }
+
+  function pickMime() {
+    for (const m of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"]) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m;
+    }
+    return "";
+  }
+
+  async function open() {
+    if (active) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast("Your browser doesn't support microphone access here. Open the app via http://localhost.");
+      return;
+    }
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    caption.textContent = "";
+    setState("thinking", "Connecting…");
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+    } catch (e) {
+      close();
+      toast("Microphone access was blocked. Allow it in your browser to use voice mode.");
+      return;
+    }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    micAnalyser = ctx.createAnalyser();
+    micAnalyser.fftSize = 2048;
+    ctx.createMediaStreamSource(stream).connect(micAnalyser);
+    outAnalyser = ctx.createAnalyser();
+    outAnalyser.fftSize = 2048;
+    outAnalyser.connect(ctx.destination);
+    player = new Audio();
+    ctx.createMediaElementSource(player).connect(outAnalyser);
+
+    active = true;
+    muted = false;
+    renderMute();
+    loop();
+    listen();
+  }
+
+  function listen() {
+    if (!active) return;
+    if (muted) { setState("muted", "Microphone is off"); return; }
+    chunks = [];
+    heardSpeech = false;
+    speechStart = 0;
+    turnStart = lastVoice = performance.now();
+    const mime = pickMime();
+    recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    recorder.onstop = onTurnEnd;
+    recorder.start(250);
+    setState("listening", "Listening…");
+  }
+
+  function endTurn() {
+    if (recorder && recorder.state === "recording") recorder.stop();
+  }
+
+  async function onTurnEnd() {
+    if (!active) return;
+    if (!heardSpeech || muted) { listen(); return; }
+    const type = recorder.mimeType || "audio/webm";
+    const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+    const blob = new Blob(chunks, { type });
+    setState("thinking", "Thinking…");
+
+    const form = new FormData();
+    form.append("session_id", sessionId);
+    form.append("audio", blob, `speech.${ext}`);
+    request = new AbortController();
+    try {
+      const r = await fetch("/voice", { method: "POST", body: form, signal: request.signal });
+      if (!r.ok) throw new Error(`Server returned ${r.status}`);
+      const d = await r.json();
+      if (!active) return;
+      if (d.transcript) addMessage("user", d.transcript, { voice: true });
+      addMessage("assistant", d.reply);
+      caption.textContent = d.reply.replace(/[*`#]/g, "");
+      speak(d.audio_url);
+    } catch (e) {
+      if (e.name === "AbortError") return;
+      console.error(e);
+      caption.textContent = "Sorry, something went wrong. Try again.";
+      if (active) listen();
+    }
+  }
+
+  function speak(url) {
+    setState("speaking", "Speaking — tap the orb to interrupt");
+    player.src = url;
+    player.onended = () => active && listen();
+    player.play().catch(() => listen());
+  }
+
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    const now = performance.now();
+    let lvl = 0;
+    if (state === "listening") {
+      lvl = level(micAnalyser);
+      const threshold = Math.max(0.015, noiseFloor * 3);
+      if (lvl > threshold) {
+        if (!speechStart) speechStart = now;
+        if (now - speechStart > MIN_SPEECH_MS) heardSpeech = true;
+        lastVoice = now;
+      } else {
+        speechStart = 0;
+        noiseFloor = noiseFloor * 0.98 + lvl * 0.02;
+      }
+      const silentFor = now - lastVoice;
+      if ((heardSpeech && silentFor > SILENCE_MS) || now - turnStart > MAX_TURN_MS) endTurn();
+      if (!heardSpeech && now - turnStart > 4000 && !caption.textContent) caption.textContent = "Go ahead, I'm listening.";
+    } else if (state === "speaking") {
+      lvl = level(outAnalyser);
+    }
+    orb.style.setProperty("--level", Math.min(1, lvl * 6).toFixed(3));
+  }
+
+  function renderMute() {
+    muteBtn.innerHTML = muted ? ICONS.micOff : ICONS.mic;
+    muteBtn.classList.toggle("on", muted);
+    muteBtn.title = muted ? "Unmute microphone" : "Mute microphone";
+    muteBtn.setAttribute("aria-label", muteBtn.title);
+  }
+
+  function toggleMute() {
+    if (!active) return;
+    muted = !muted;
+    stream.getAudioTracks().forEach((t) => (t.enabled = !muted));
+    renderMute();
+    if (muted && state === "listening") { heardSpeech = false; endTurn(); }
+    else if (!muted && state === "muted") listen();
+    else orb.classList.toggle("muted", muted);
+  }
+
+  function onOrbTap() {
+    if (state === "speaking") { player.pause(); listen(); }       // interrupt
+    else if (state === "listening" && heardSpeech) endTurn();     // "I'm done talking"
+    else if (state === "muted") toggleMute();
+  }
+
+  function close() {
+    active = false;
+    cancelAnimationFrame(raf);
+    request?.abort();
+    if (recorder && recorder.state !== "inactive") { recorder.onstop = null; recorder.stop(); }
+    if (player) { player.pause(); player.onended = null; }
+    stream?.getTracks().forEach((t) => t.stop());
+    ctx?.close();
+    stream = ctx = recorder = player = null;
+    state = "idle";
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    input.focus();
+  }
+
+  orb.addEventListener("click", onOrbTap);
+  orb.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && onOrbTap());
+  muteBtn.addEventListener("click", toggleMute);
+  $("endBtn").addEventListener("click", close);
+  document.addEventListener("keydown", (e) => e.key === "Escape" && active && close());
+
+  return { open };
+})();
+
+updateAction();
+restoreHistory();
+input.focus();
+</script>
+</body>
+</html>

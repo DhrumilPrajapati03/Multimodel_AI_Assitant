@@ -4,7 +4,7 @@ from pathlib import Path
 
 import gradio as gr
 from fastapi import FastAPI, File, Form, UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -26,9 +26,12 @@ class ChatOut(BaseModel):
     intent: str
 
 
-@app.get("/")
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+@app.get("/", include_in_schema=False)
 def root():
-    return RedirectResponse("/ui")
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.post("/chat", response_model=ChatOut)

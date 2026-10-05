@@ -17,7 +17,14 @@ if not Path("chroma_db").exists():
     subprocess.run([sys.executable, "-m", "scripts.ingest"], check=True)
 
 # 3. Start the app
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from app.main import app
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 7860)))
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", 7860))
+    print(f"\n  Open the assistant at: http://localhost:{port}\n")
+    uvicorn.run(app, host=host, port=port)

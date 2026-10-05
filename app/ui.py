@@ -36,7 +36,7 @@ def voice_fn(audio_path, history, session_id):
 with gr.Blocks(title="Academy Assistant") as demo:
     gr.Markdown("## Academy Assistant\nAsk about courses, fees, timings or syllabus.")
     session = gr.State(lambda: uuid.uuid4().hex)   # new id per browser session
-    chatbot = gr.Chatbot(type="messages", height=450)
+    chatbot = gr.Chatbot(height=450)
     with gr.Row():
         txt = gr.Textbox(placeholder="Type your question...", show_label=False, scale=4)
         send = gr.Button("Send", scale=1)
