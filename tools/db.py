@@ -1,7 +1,21 @@
+from pathlib import Path
+
 from sqlalchemy import create_engine, text
 from config import DATABASE_URL
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+SQL_DIR = Path(__file__).resolve().parent.parent / "db"
+
+
+def init_db():
+    """Create and seed the tables on a fresh database (e.g. a new hosted Postgres)."""
+    with engine.begin() as conn:
+        if conn.execute(text("SELECT to_regclass('public.courses')")).scalar():
+            return False
+        for name in ("schema.sql", "seed.sql"):
+            conn.exec_driver_sql((SQL_DIR / name).read_text(encoding="utf-8"))
+    return True
 
 
 def save_message(session_id, role, message, intent=None, channel="text"):

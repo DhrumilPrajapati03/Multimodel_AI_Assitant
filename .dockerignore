@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+**/__pycache__
+.ipynb_checkpoints
+.mypy_cache
+.env
+chroma_db
+audio_out
+models/voices
+notebooks
+tests
+*.log

@@ -1,0 +1,23 @@
+# Render Blueprint: creates the web service and its Postgres database together.
+# Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: academy-assistant
+    runtime: docker
+    region: singapore          # closest Render region to India; keep it the same as the database
+    plan: standard             # 2 GB RAM. The app peaks near 1 GB once voice is used; 512 MB plans crash.
+    healthCheckPath: /
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false            # Render asks for the value when you create the Blueprint
+      - key: DATABASE_URL
+        fromDatabase:
+          name: academy-db
+          property: connectionString
+
+databases:
+  - name: academy-db
+    region: singapore
+    plan: free                 # free Postgres expires after 30 days; switch to basic-256mb for anything long-lived
+    databaseName: academy
+    user: academy

@@ -32,7 +32,13 @@ if not (PROJECT_ROOT / "chroma_db").exists():
         sys.exit(f"Missing {ingest} - the vector index can't be built without it.")
     subprocess.run([sys.executable, str(ingest)], cwd=PROJECT_ROOT, env=child_env, check=True)
 
-# 3. Start the app
+# 3. Create and seed the database tables if this is a fresh database
+from tools.db import init_db
+
+if init_db():
+    print("Database was empty - created tables from db/schema.sql and db/seed.sql")
+
+# 4. Start the app
 from app.main import app
 
 if __name__ == "__main__":

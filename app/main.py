@@ -45,7 +45,10 @@ def voice(session_id: str = Form(...), audio: UploadFile = File(...)):
     suffix = Path(audio.filename or "audio.wav").suffix or ".wav"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         shutil.copyfileobj(audio.file, tmp)
-    transcript, reply, audio_path = handle_voice(tmp.name, session_id)
+    try:
+        transcript, reply, audio_path = handle_voice(tmp.name, session_id)
+    finally:
+        Path(tmp.name).unlink(missing_ok=True)
     return {
         "transcript": transcript,
         "reply": reply,
