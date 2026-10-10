@@ -13,3 +13,5 @@ services:
         sync: false            # Render asks for these values when you create the Blueprint
       - key: DATABASE_URL
         sync: false            # your Neon connection string
+      - key: ADMIN_TOKEN
+        generateValue: true    # random password for /admin - copy it from the Environment tab

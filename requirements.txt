@@ -5,15 +5,14 @@ python-dotenv
 groq
 langchain
 langchain-groq
-langchain-community
-langchain-chroma
 langchain-text-splitters
 langgraph
-chromadb
 pypdf
 sqlalchemy
 psycopg[binary]
 numpy
+onnxruntime
+tokenizers
 scikit-learn
 joblib
 piper-tts

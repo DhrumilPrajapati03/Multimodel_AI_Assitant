@@ -13,7 +13,7 @@ Needs in .env (or the environment):
     HF_DATABASE_URL   a hosted Postgres URL (e.g. Neon) - the Space can't reach localhost
 
 It creates the Space if needed, stores both values as Space secrets, and uploads every
-file git tracks (so .env, .venv and chroma_db never leave your machine). Re-run it to redeploy.
+file git tracks (so .env and .venv never leave your machine). Re-run it to redeploy.
 """
 import argparse
 import os

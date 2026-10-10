@@ -1,23 +1,26 @@
+"""Index the PDFs in data/ into the knowledge base (Postgres).
+
+The app does this automatically on start-up; run it by hand after adding PDFs to data/:
+    python scripts/ingest.py
+Files that are already indexed are skipped. Staff can also upload documents at /admin.
+"""
 import sys
 from pathlib import Path
 
-# Check for PDFs before importing tools.rag: creating the store makes an empty chroma_db/,
-# which start.py would then treat as an existing index and never rebuild.
-pdfs = list(Path("data").glob("*.pdf"))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+pdfs = list((ROOT / "data").glob("*.pdf"))
 if not pdfs:
-    sys.exit(f"No PDFs found in {Path('data').resolve()} - add the academy PDFs there and run again.")
+    sys.exit(f"No PDFs found in {ROOT / 'data'} - add the academy PDFs there and run again.")
 
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from tools.rag import store
+from tools import docstore  # noqa: E402
+from tools.db import init_db  # noqa: E402
 
-docs = []
-for pdf in pdfs:
-    docs.extend(PyPDFLoader(str(pdf)).load())
-
-splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-chunks = splitter.split_documents(docs)
-if not chunks:
-    sys.exit("The PDFs contain no extractable text (scanned images?) - nothing to index.")
-store.add_documents(chunks)
-print(f"Indexed {len(chunks)} chunks from {len(pdfs)} PDFs")
+init_db()
+added = docstore.seed_from_folder(ROOT / "data")
+for doc in docstore.list_documents():
+    if doc["source"] == "seed":
+        print(f"  {doc['status']:10s} {doc['chunks']:4d} chunks  {doc['name']}"
+              + (f"  ({doc['error']})" if doc["error"] else ""))
+print(f"Indexed {added} new PDF(s); {len(pdfs) - added} already in the knowledge base.")

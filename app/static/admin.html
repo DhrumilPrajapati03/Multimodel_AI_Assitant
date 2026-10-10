@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistant Admin</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #f9f9f7; --panel: #ffffff; --surface: #f4f4f5; --text: #18181b; --muted: #6b6b73;
+    --border: #e4e4e7; --btn: #18181b; --btn-text: #fff; --accent: #6d5dfc;
+    --bar: #2a78d6;                               /* single-series chart hue (validated) */
+    --good: #0ca30c; --warn: #b77800; --bad: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f12; --panel: #141417; --surface: #1f1f24; --text: #ececf1; --muted: #9b9ba7;
+      --border: #2c2c33; --btn: #ececf1; --btn-text: #141417; --bar: #3987e5; --warn: #fab219; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+  .brand { font-weight: 600; display: flex; gap: 10px; align-items: center; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #22c1ee, #6d5dfc); }
+  nav { display: flex; gap: 4px; }
+  nav button { border: 0; background: none; padding: 6px 12px; border-radius: 8px; color: var(--muted); }
+  nav button[aria-selected="true"] { background: var(--surface); color: var(--text); font-weight: 500; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 4px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+  a { color: var(--text); text-underline-offset: 3px; }
+  .link-btn { border: 0; background: none; color: var(--muted); }
+  .link-btn:hover { color: var(--text); }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  section[hidden] { display: none; }
+  .grid { display: grid; gap: 16px; }
+  .tiles { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+  .panel h2 { font-size: 14px; font-weight: 600; margin: 0 0 12px; }
+  .panel .sub { color: var(--muted); font-weight: 400; }
+  .tile .label { color: var(--muted); font-size: 13px; }
+  .tile .value { font-size: 28px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .tile .note { color: var(--muted); font-size: 12px; }
+  .muted { color: var(--muted); }
+  .empty-note { color: var(--muted); padding: 8px 0; }
+
+  /* column chart */
+  .cols { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; align-items: end; height: 160px; border-bottom: 1px solid var(--border); }
+  .col { position: relative; height: 100%; display: flex; align-items: flex-end; outline: none; }
+  .col .fill { width: 100%; background: var(--bar); border-radius: 4px 4px 0 0; min-height: 1px; }
+  .col.zero .fill { background: var(--border); }
+  .col:hover .fill, .col:focus .fill { filter: brightness(1.15); }
+  .col .tip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--text); color: var(--panel); padding: 4px 8px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 1; }
+  .col:hover .tip, .col:focus .tip { display: block; }
+  .col-axis { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .col-axis span { text-align: center; white-space: nowrap; overflow: hidden; }
+  .ymax { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+
+  /* horizontal bars */
+  .bars { display: grid; grid-template-columns: max-content 1fr max-content; gap: 6px 10px; align-items: center; }
+  .bars .lbl { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bars .track { height: 14px; position: relative; }
+  .bars .fill { position: absolute; inset: 0 auto 0 0; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .bars .val { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .table-wrap { overflow-x: auto; }
+  .qa { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .qa:last-child { border-bottom: 0; }
+  .qa .q { font-weight: 500; }
+  .qa .a { color: var(--muted); font-size: 13px; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--surface); white-space: nowrap; }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .pill.ready::before, .pill.contacted::before { background: var(--good); }
+  .pill.processing::before, .pill.new::before { background: var(--warn); }
+  .pill.failed::before { background: var(--bad); }
+  select.status { border: 1px solid var(--border); background: var(--panel); border-radius: 8px; padding: 4px 8px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+
+  .drop { border: 2px dashed var(--border); border-radius: 14px; padding: 28px; text-align: center; color: var(--muted); transition: border-color .15s, background .15s; }
+  .drop.over { border-color: var(--accent); background: var(--surface); }
+  .btn { border: 0; border-radius: 10px; padding: 8px 14px; background: var(--btn); color: var(--btn-text); }
+  .btn.ghost { background: var(--surface); color: var(--text); }
+  .btn.danger { background: none; color: var(--bad); padding: 4px 8px; }
+
+  .login { max-width: 380px; margin: 12vh auto; }
+  .login input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); margin: 10px 0; }
+  .error { color: var(--bad); min-height: 20px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #27272a; color: #fff; padding: 10px 16px; border-radius: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="login panel" id="login" hidden>
+  <div class="brand"><span class="dot"></span>Assistant admin</div>
+  <p class="muted">Enter the admin token (the <code>ADMIN_TOKEN</code> setting on the server).</p>
+  <form id="loginForm">
+    <label class="sr-only" for="token">Admin token</label>
+    <input id="token" type="password" autocomplete="current-password" placeholder="Admin token" required>
+    <div class="error" id="loginError" role="alert"></div>
+    <button class="btn" type="submit">Sign in</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <div class="brand"><span class="dot"></span>Assistant admin</div>
+    <nav role="tablist">
+      <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="leads" aria-selected="false">Leads<span class="badge" id="leadBadge" hidden></span></button>
+      <button role="tab" data-tab="docs" aria-selected="false">Documents</button>
+    </nav>
+    <div><a class="link-btn" href="/" target="_blank" rel="noopener">Open chat ↗</a> &nbsp; <button class="link-btn" id="logout">Sign out</button></div>
+  </header>
+
+  <main>
+    <section id="tab-overview">
+      <div class="grid tiles" id="tiles"></div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="panel" style="grid-column: 1 / -1">
+          <h2>Questions per day <span class="sub">· last 14 days</span></h2>
+          <div id="daily"></div>
+        </div>
+        <div class="panel"><h2>What people ask about <span class="sub">· by intent</span></h2><div id="intents"></div></div>
+        <div class="panel"><h2>Voice languages</h2><div id="languages"></div></div>
+        <div class="panel"><h2>Top questions</h2><div id="top"></div></div>
+        <div class="panel"><h2>Couldn't answer <span class="sub">· add documents for these</span></h2><div id="unanswered"></div></div>
+      </div>
+    </section>
+
+    <section id="tab-leads" hidden>
+      <div class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0">Enquiries</h2>
+          <select class="status" id="leadFilter" aria-label="Filter by status">
+            <option value="">All</option><option value="new">New</option><option value="contacted">Contacted</option><option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Course</th><th>Message</th><th>Received</th><th>Status</th></tr></thead>
+          <tbody id="leadRows"></tbody>
+        </table></div>
+        <div class="empty-note" id="leadEmpty" hidden>No enquiries yet. They appear here when someone asks to enroll or get a callback.</div>
+      </div>
+    </section>
+
+    <section id="tab-docs" hidden>
+      <div class="panel">
+        <h2>Add to the knowledge base</h2>
+        <div class="drop" id="drop">
+          Drop PDFs, text files or photos of notices here, or
+          <button class="btn ghost" id="pick" type="button">choose files</button>
+          <div style="margin-top:6px;font-size:12px">PDF, TXT, MD, JPG, PNG, WebP · up to 10 MB each. The assistant can answer from them once they're "ready".</div>
+        </div>
+        <input type="file" id="files" multiple accept=".pdf,.txt,.md,image/jpeg,image/png,image/webp" class="sr-only" tabindex="-1">
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <h2>Documents</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Name</th><th>Type</th><th>Status</th><th class="num">Chunks</th><th>Added</th><th></th></tr></thead>
+          <tbody id="docRows"></tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtWhen = (v) => v ? new Date(v).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+const num = (n) => Number(n || 0).toLocaleString("en-IN");
+let toastTimer;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3500); }
+
+/* ---------------- auth ---------------- */
+let token = "";
+try { token = sessionStorage.getItem("adminToken") || ""; } catch {}
+
+async function api(path, opts = {}) {
+  const r = await fetch("/admin/api" + path, { ...opts, headers: { ...(opts.headers || {}), "X-Admin-Token": token } });
+  if (r.status === 401) { signOut("Wrong admin token."); throw new Error("unauthorized"); }
+  if (r.status === 503) { signOut("Admin is disabled on this server: set the ADMIN_TOKEN environment variable."); throw new Error("disabled"); }
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.detail || `Request failed (${r.status})`);
+  return body;
+}
+function signOut(message = "") {
+  token = "";
+  try { sessionStorage.removeItem("adminToken"); } catch {}
+  $("app").hidden = true; $("login").hidden = false;
+  $("loginError").textContent = message;
+  $("token").focus();
+}
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  token = $("token").value.trim();
+  try {
+    await api("/stats");
+    try { sessionStorage.setItem("adminToken", token); } catch {}
+    start();
+  } catch (err) { if (!["unauthorized", "disabled"].includes(err.message)) $("loginError").textContent = err.message; }
+});
+$("logout").addEventListener("click", () => signOut());
+
+/* ---------------- tabs ---------------- */
+document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+function showTab(name) {
+  document.querySelectorAll("[role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  ["overview", "leads", "docs"].forEach((t) => ($("tab-" + t).hidden = t !== name));
+  ({ overview: loadStats, leads: loadLeads, docs: loadDocs })[name]();
+}
+
+/* ---------------- charts (single series: one hue, no legend; values in text ink) ---------------- */
+function columnChart(points) {   // [{label, value, tip}]
+  const max = Math.max(...points.map((p) => p.value), 0);
+  if (!max) return '<div class="empty-note">No questions in this period yet.</div>';
+  const step = Math.ceil(points.length / 7);
+  return `<div class="ymax">${num(max)}</div>
+    <div class="cols" role="img" aria-label="${esc(points.map((p) => `${p.label}: ${p.value}`).join(", "))}">
+      ${points.map((p) => `<div class="col${p.value ? "" : " zero"}" tabindex="0">
+        <div class="fill" style="height:${p.value ? Math.max(2, p.value / max * 100) : 1}%"></div>
+        <span class="tip">${esc(p.tip)}</span></div>`).join("")}
+    </div>
+    <div class="col-axis">${points.map((p, i) => `<span>${i % step === 0 || i === points.length - 1 ? esc(p.label) : ""}</span>`).join("")}</div>`;
+}
+function barList(items, empty) {   // [{label, value}]
+  if (!items.length) return `<div class="empty-note">${esc(empty)}</div>`;
+  const max = Math.max(...items.map((i) => i.value)) || 1;
+  return `<div class="bars">${items.map((i) => `
+    <span class="lbl" title="${esc(i.label)}">${esc(i.label)}</span>
+    <span class="track" title="${esc(i.label)}: ${num(i.value)}"><span class="fill" style="width:${(i.value / max * 100).toFixed(1)}%"></span></span>
+    <span class="val">${num(i.value)}</span>`).join("")}</div>`;
+}
+
+/* ---------------- overview ---------------- */
+async function loadStats() {
+  const s = await api("/stats");
+  const t = s.totals;
+  const pct = (a, b) => (b ? Math.round(a / b * 100) : 0) + "%";
+  $("tiles").innerHTML = [
+    ["Conversations", num(t.conversations), `${num(t.conversations_7d)} in the last 7 days`],
+    ["Questions", num(t.questions), "all time"],
+    ["By voice", pct(t.voice, t.questions), `${num(t.voice)} voice questions`],
+    ["With a photo", num(t.images), "image questions"],
+    ["Leads", num(t.leads), `${num(t.new_leads)} new`],
+  ].map(([l, v, n]) => `<div class="panel tile"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("");
+  setLeadBadge(t.new_leads);
+
+  $("daily").innerHTML = columnChart(s.daily.map((d) => {
+    const date = new Date(d.day + "T00:00:00");
+    return { label: date.toLocaleDateString(undefined, { day: "numeric", month: "short" }), value: d.questions,
+             tip: `${date.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}: ${d.questions} question${d.questions === 1 ? "" : "s"}` };
+  }));
+  $("intents").innerHTML = barList(s.intents.map((i) => ({ label: i.intent.replace(/_/g, " "), value: i.n })), "No questions yet.");
+  $("languages").innerHTML = barList(s.languages.map((l) => ({ label: l.language, value: l.n })), "No voice questions yet.");
+  $("top").innerHTML = s.top_questions.length
+    ? `<table><thead><tr><th>Question</th><th class="num">Asked</th></tr></thead><tbody>${s.top_questions.map((q) => `<tr><td>${esc(q.question)}</td><td class="num">${num(q.n)}</td></tr>`).join("")}</tbody></table>`
+    : '<div class="empty-note">No questions yet.</div>';
+  $("unanswered").innerHTML = s.unanswered.length
+    ? s.unanswered.map((u) => `<div class="qa"><div class="q">${esc(u.question)}</div><div class="a">${esc(u.answer)} · ${esc(fmtWhen(u.created_at))}</div></div>`).join("")
+    : '<div class="empty-note">Nothing yet — the assistant answered everything.</div>';
+}
+
+/* ---------------- leads ---------------- */
+function setLeadBadge(n) { const b = $("leadBadge"); b.hidden = !n; b.textContent = n; }
+async function loadLeads() {
+  const filter = $("leadFilter").value;
+  const leads = (await api("/leads")).filter((l) => !filter || l.status === filter);
+  $("leadEmpty").hidden = leads.length > 0;
+  $("leadRows").innerHTML = leads.map((l) => `<tr>
+    <td>${esc(l.name)}${l.email ? `<div class="muted">${esc(l.email)}</div>` : ""}</td>
+    <td><a href="tel:${esc(l.phone)}">${esc(l.phone)}</a></td>
+    <td>${esc(l.course || "")}</td>
+    <td>${esc(l.message || "")}</td>
+    <td class="muted">${esc(fmtWhen(l.created_at))}</td>
+    <td><select class="status" data-id="${l.id}" aria-label="Status for ${esc(l.name)}">
+      ${["new", "contacted", "closed"].map((s) => `<option value="${s}"${s === l.status ? " selected" : ""}>${s[0].toUpperCase() + s.slice(1)}</option>`).join("")}
+    </select></td></tr>`).join("");
+}
+$("leadFilter").addEventListener("change", loadLeads);
+$("leadRows").addEventListener("change", async (e) => {
+  if (!e.target.matches("select.status")) return;
+  try {
+    await api(`/leads/${e.target.dataset.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: e.target.value }) });
+    toast("Status updated");
+    const s = await api("/stats"); setLeadBadge(s.totals.new_leads);
+  } catch (err) { toast(err.message); }
+});
+
+/* ---------------- documents ---------------- */
+let pollTimer;
+async function loadDocs() {
+  const docs = await api("/documents");
+  $("docRows").innerHTML = docs.length ? docs.map((d) => `<tr>
+    <td>${esc(d.name)}${d.source === "seed" ? ' <span class="muted">· bundled</span>' : ""}${d.error ? `<div class="muted" style="color:var(--bad)">${esc(d.error)}</div>` : ""}</td>
+    <td>${esc(d.kind)}</td>
+    <td><span class="pill ${esc(d.status)}">${esc(d.status)}</span></td>
+    <td class="num">${num(d.chunks)}</td>
+    <td class="muted">${esc(fmtWhen(d.created_at))}</td>
+    <td><button class="btn danger" data-del="${d.id}" data-name="${esc(d.name)}">Delete</button></td></tr>`).join("")
+    : '<tr><td colspan="6" class="empty-note">No documents yet.</td></tr>';
+  clearTimeout(pollTimer);
+  if (docs.some((d) => d.status === "processing") && !$("tab-docs").hidden) pollTimer = setTimeout(loadDocs, 3000);
+}
+$("docRows").addEventListener("click", async (e) => {
+  const id = e.target.dataset.del;
+  if (!id || !confirm(`Delete "${e.target.dataset.name}"? The assistant will no longer use it.`)) return;
+  try { await api(`/documents/${id}`, { method: "DELETE" }); toast("Deleted"); loadDocs(); } catch (err) { toast(err.message); }
+});
+
+// Photos are shrunk in the browser (max 2000 px JPEG) so they stay under the vision model's size limit.
+async function shrinkImage(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bitmap.width * scale); c.height = Math.round(bitmap.height * scale);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+  g.drawImage(bitmap, 0, 0, c.width, c.height);
+  const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.88));
+  return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
+}
+async function upload(files) {
+  for (let file of files) {
+    try {
+      if (file.type.startsWith("image/")) file = await shrinkImage(file);
+      const form = new FormData();
+      form.append("file", file, file.name);
+      await api("/documents", { method: "POST", body: form });
+      toast(`Uploaded ${file.name} - indexing…`);
+    } catch (err) { toast(`${file.name}: ${err.message}`); }
+  }
+  loadDocs();
+}
+const drop = $("drop");
+$("pick").addEventListener("click", () => $("files").click());
+$("files").addEventListener("change", (e) => { upload([...e.target.files]); e.target.value = ""; });
+["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((t) => drop.addEventListener(t, () => drop.classList.remove("over")));
+drop.addEventListener("drop", (e) => { e.preventDefault(); upload([...e.dataTransfer.files]); });
+
+/* ---------------- start ---------------- */
+function start() {
+  $("login").hidden = true; $("app").hidden = false;
+  showTab("overview");
+}
+if (token) api("/stats").then(start).catch(() => {}); else signOut();
+</script>
+</body>
+</html>

@@ -1,22 +1,17 @@
 from pathlib import Path
 
-from groq import Groq
-
-from config import GROQ_API_KEY
-
-# Groq's hosted Whisper: no local model, so it fits small free-tier servers.
-STT_MODEL = "whisper-large-v3-turbo"
-
-_client = None
+from config import STT_MODEL
+from tools.groq_client import client
 
 
-def transcribe(audio_path: str) -> str:
-    global _client
-    if _client is None:
-        _client = Groq(api_key=GROQ_API_KEY, timeout=30, max_retries=2)
+def transcribe(audio_path: str):
+    """Speech-to-text on Groq's hosted Whisper. Returns (text, language), where
+    language is the name Whisper detected, e.g. "English" or "Hindi"."""
     path = Path(audio_path)
-    result = _client.audio.transcriptions.create(
+    result = client().audio.transcriptions.create(
         file=(path.name, path.read_bytes()),
         model=STT_MODEL,
+        response_format="verbose_json",
     )
-    return result.text.strip()
+    language = (getattr(result, "language", None) or "").strip().title() or None
+    return result.text.strip(), language

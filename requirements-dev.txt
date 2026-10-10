@@ -1,5 +1,6 @@
 -r requirements.txt
-# Notebooks and experiments only - not needed to run the app
+# Tests, notebooks and experiments - not needed to run the app
+pytest
 pandas
 sentence-transformers
 tensorflow
