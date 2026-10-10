@@ -1,5 +1,9 @@
 """Deploy the app to a Hugging Face Docker Space.
 
+Note: Hugging Face requires a PRO subscription to host Docker Spaces (even on free
+cpu-basic hardware); without it, creating the Space fails with "402 Payment Required".
+For a free deployment use Render's free plan instead (render.yaml).
+
 Usage (from the project folder, after `hf auth login` with a WRITE token):
     python scripts/deploy_hf.py                     # -> <your-username>/academy-assistant
     python scripts/deploy_hf.py --space me/my-space --private

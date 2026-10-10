@@ -500,8 +500,9 @@ const Voice = (() => {
       if (!active) return;
       if (d.transcript) addMessage("user", d.transcript, { voice: true });
       addMessage("assistant", d.reply);
-      caption.textContent = d.reply.replace(/[*`#]/g, "");
-      speak(d.audio_url);
+      const spoken = d.reply.replace(/[*`#]/g, "");
+      caption.textContent = spoken;
+      speak(d.audio_url, spoken);
     } catch (e) {
       if (e.name === "AbortError") return;
       console.error(e);
@@ -510,11 +511,38 @@ const Voice = (() => {
     }
   }
 
-  function speak(url) {
+  // Browser text-to-speech, used when the server sends no audio (TTS_MODE=browser).
+  const synth = window.speechSynthesis;
+  let browserVoice = null, utterance = null, speakingSince = 0;
+  function pickVoice() {
+    const score = (v) => (/natural|neural|online/i.test(v.name) ? 4 : 0)
+      + (/google/i.test(v.name) ? 3 : 0) + (/en-IN/i.test(v.lang) ? 1 : 0);
+    const english = synth.getVoices().filter((v) => /^en([-_]|$)/i.test(v.lang));
+    browserVoice = english.sort((a, b) => score(b) - score(a))[0] || null;
+  }
+  if (synth) { pickVoice(); synth.addEventListener?.("voiceschanged", pickVoice); }
+
+  function speak(url, text) {
     setState("speaking", "Speaking — tap the orb to interrupt");
-    player.src = url;
-    player.onended = () => active && listen();
-    player.play().catch(() => listen());
+    speakingSince = performance.now();
+    if (url) {
+      player.src = url;
+      player.onended = () => active && listen();
+      player.play().catch(() => listen());
+      return;
+    }
+    if (!synth) { listen(); return; }
+    synth.cancel();
+    utterance = new SpeechSynthesisUtterance(text);
+    if (browserVoice) { utterance.voice = browserVoice; utterance.lang = browserVoice.lang; }
+    utterance.onend = utterance.onerror = () => { utterance = null; if (active && state === "speaking") listen(); };
+    synth.speak(utterance);
+  }
+
+  function stopSpeaking() {
+    player?.pause();
+    if (utterance) { utterance.onend = utterance.onerror = null; utterance = null; }
+    synth?.cancel();
   }
 
   function loop() {
@@ -536,7 +564,8 @@ const Voice = (() => {
       if ((heardSpeech && silentFor > SILENCE_MS) || now - turnStart > MAX_TURN_MS) endTurn();
       if (!heardSpeech && now - turnStart > 4000 && !caption.textContent) caption.textContent = "Go ahead, I'm listening.";
     } else if (state === "speaking") {
-      lvl = level(outAnalyser);
+      // Browser speech can't be measured, so give the orb a gentle talking pulse.
+      lvl = utterance ? 0.05 + 0.06 * Math.abs(Math.sin((now - speakingSince) / 140)) : level(outAnalyser);
     }
     orb.style.setProperty("--level", Math.min(1, lvl * 6).toFixed(3));
   }
@@ -559,7 +588,7 @@ const Voice = (() => {
   }
 
   function onOrbTap() {
-    if (state === "speaking") { player.pause(); listen(); }       // interrupt
+    if (state === "speaking") { stopSpeaking(); listen(); }       // interrupt
     else if (state === "listening" && heardSpeech) endTurn();     // "I'm done talking"
     else if (state === "muted") toggleMute();
   }
@@ -569,7 +598,8 @@ const Voice = (() => {
     cancelAnimationFrame(raf);
     request?.abort();
     if (recorder && recorder.state !== "inactive") { recorder.onstop = null; recorder.stop(); }
-    if (player) { player.pause(); player.onended = null; }
+    stopSpeaking();
+    if (player) player.onended = null;
     stream?.getTracks().forEach((t) => t.stop());
     ctx?.close();
     stream = ctx = recorder = player = null;

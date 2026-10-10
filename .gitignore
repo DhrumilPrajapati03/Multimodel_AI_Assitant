@@ -6,3 +6,4 @@ chroma_db/
 audio_out/
 models/voices/
 .ipynb_checkpoints/
+models/embeddings/

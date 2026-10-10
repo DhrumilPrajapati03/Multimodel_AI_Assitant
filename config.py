@@ -7,6 +7,10 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
 MODEL_NAME = "openai/gpt-oss-20b"
 
+# "server": speak replies with Piper on the server (default).
+# "browser": the browser speaks them - saves ~165 MB of RAM on small free hosting plans.
+TTS_MODE = os.getenv("TTS_MODE", "server").lower()
+
 # Hosts like Render, Neon and Railway give "postgres://" or "postgresql://" URLs;
 # SQLAlchemy needs the driver named explicitly.
 if DATABASE_URL:

@@ -2,8 +2,8 @@ import logging
 from tools.intent import classify_intent
 from tools.agent import ask_agent
 from tools.stt import transcribe
-from tools.tts import synthesize
 from tools.db import save_message
+from config import TTS_MODE
 
 log = logging.getLogger(__name__)
 
@@ -29,9 +29,17 @@ def handle_text(text: str, session_id: str, channel: str = "text"):
     return reply, intent
 
 
+def speak(text: str):
+    """Path to a WAV of the reply, or None when the browser does the speaking."""
+    if TTS_MODE != "server":
+        return None
+    from tools.tts import synthesize   # loads Piper only when it's used
+    return synthesize(text)
+
+
 def handle_voice(audio_path: str, session_id: str):
     transcript = transcribe(audio_path)
     if not transcript:
-        return transcript, NOT_HEARD_REPLY, synthesize(NOT_HEARD_REPLY)
+        return transcript, NOT_HEARD_REPLY, speak(NOT_HEARD_REPLY)
     reply, _ = handle_text(transcript, session_id, channel="voice")
-    return transcript, reply, synthesize(reply)
+    return transcript, reply, speak(reply)

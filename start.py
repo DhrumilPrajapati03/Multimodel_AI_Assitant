@@ -33,10 +33,21 @@ if not (PROJECT_ROOT / "chroma_db").exists():
     subprocess.run([sys.executable, str(ingest)], cwd=PROJECT_ROOT, env=child_env, check=True)
 
 # 3. Create and seed the database tables if this is a fresh database
+import time
+
 from tools.db import init_db
 
-if init_db():
-    print("Database was empty - created tables from db/schema.sql and db/seed.sql")
+# Retry: hosted databases (e.g. Neon's free tier) may need a moment to wake up.
+for attempt in range(1, 6):
+    try:
+        if init_db():
+            print("Database was empty - created tables from db/schema.sql and db/seed.sql")
+        break
+    except Exception as exc:
+        if attempt == 5:
+            raise
+        print(f"Database not reachable yet ({type(exc).__name__}), retrying in 3s... [{attempt}/5]")
+        time.sleep(3)
 
 # 4. Start the app
 from app.main import app

@@ -6,7 +6,8 @@ from config import MODEL_NAME
 from tools.rag import search_academy_docs
 from tools.sql_tool import query_academy_db
 
-llm = ChatGroq(model=MODEL_NAME, temperature=0.3, reasoning_effort="low")
+llm = ChatGroq(model=MODEL_NAME, temperature=0.3, reasoning_effort="low",
+               timeout=30, max_retries=2)   # never hang a request on a stuck connection
 
 SYSTEM_PROMPT = """You are the helpdesk assistant for our computer academy.
 - Use search_academy_docs for syllabus, course content and policy questions.

@@ -3,7 +3,22 @@ from pathlib import Path
 from sqlalchemy import create_engine, text
 from config import DATABASE_URL
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    # Hosted databases (e.g. Neon's free tier) suspend after ~5 idle minutes and drop
+    # connections silently. Recycle pooled connections before that, and fail fast on a
+    # dead connection instead of waiting ~15 min for Linux's default TCP timeout.
+    pool_recycle=240,
+    connect_args={
+        "connect_timeout": 15,
+        "keepalives": 1,
+        "keepalives_idle": 30,
+        "keepalives_interval": 10,
+        "keepalives_count": 3,
+        "tcp_user_timeout": 30000,   # ms
+    },
+)
 
 SQL_DIR = Path(__file__).resolve().parent.parent / "db"
 

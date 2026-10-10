@@ -1,4 +1,7 @@
 -r requirements.txt
+# Notebooks and experiments only - not needed to run the app
+pandas
+sentence-transformers
 tensorflow
 jupyter
 matplotlib

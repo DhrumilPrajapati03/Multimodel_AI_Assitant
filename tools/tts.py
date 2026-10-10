@@ -1,6 +1,7 @@
 import uuid
 import wave
 from pathlib import Path
+import tools.onnx_threads  # noqa: F401  (must run before the model loads)
 from piper import PiperVoice
 
 VOICE_PATH = "models/voices/en_US-lessac-medium.onnx"

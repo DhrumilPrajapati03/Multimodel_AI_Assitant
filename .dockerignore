@@ -11,3 +11,4 @@ models/voices
 notebooks
 tests
 *.log
+models/embeddings

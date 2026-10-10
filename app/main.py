@@ -1,18 +1,31 @@
 import shutil
 import tempfile
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-import gradio as gr
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.pipeline import handle_text, handle_voice
-from app.ui import demo
 from tools.db import get_history
 
-app = FastAPI(title="Academy Assistant API")
+def _warm_up():
+    # Load the embedding model in the background so the first document question
+    # doesn't pay for it (that takes ~40 s on a 0.1-CPU free plan).
+    from tools.rag import store
+    store.similarity_search("warm up", k=1)
+
+
+@asynccontextmanager
+async def lifespan(_app):
+    threading.Thread(target=_warm_up, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Academy Assistant API", lifespan=lifespan)
 app.mount("/audio", StaticFiles(directory="audio_out"), name="audio")
 
 
@@ -52,13 +65,10 @@ def voice(session_id: str = Form(...), audio: UploadFile = File(...)):
     return {
         "transcript": transcript,
         "reply": reply,
-        "audio_url": f"/audio/{Path(audio_path).name}",
+        "audio_url": f"/audio/{Path(audio_path).name}" if audio_path else None,
     }
 
 
 @app.get("/history/{session_id}")
 def history(session_id: str):
     return get_history(session_id)
-
-
-app = gr.mount_gradio_app(app, demo, path="/ui")
